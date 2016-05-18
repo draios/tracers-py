@@ -1,10 +1,11 @@
 import os
-from IPython import embed
 import traceback
 from inspect import isfunction
 import sys
 
-NULL_FD = os.open("/dev/null", os.O_WRONLY)
+# ensure file descriptor will be closed on execve
+O_CLOEXEC = 524288 # cannot use octal because they have different syntax on python2 and 3
+NULL_FD = os.open("/dev/null", os.O_WRONLY | os.O_NONBLOCK | O_CLOEXEC)
 
 class Tracer(object):
   def __init__(self, tag=None, enter_args={}, exit_args={}):
@@ -26,9 +27,12 @@ class Tracer(object):
 
   def __emit_trace(self, direction, args={}):
     args_s = ",".join(["%s=%s" % item for item in args.items()])
+    tracer = "%s:t:%s:%s:" % (direction, self.tag, args_s)
+    if sys.version_info[0] == 3:
+      tracer = bytes(tracer, 'ascii')
     try:
-      os.write(NULL_FD, "%s:t:%s:%s:" % (direction, self.tag, args_s))
-    except:
+      os.write(NULL_FD, tracer)
+    except OSError:
       pass
 
   def __enter__(self):

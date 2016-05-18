@@ -1,13 +1,23 @@
 from sysdig_tracer import Tracer 
 import sysdig_tracer
 import os
+import fcntl
+import sys
+import pytest
 
 # hack to send tracers to a pipe and allow unit testing
 read_end, write_end = os.pipe()
 sysdig_tracer.NULL_FD = write_end
+fcntl.fcntl(read_end, fcntl.F_SETFL, os.O_NONBLOCK)
 
 def check_pipe_content(s):
-  content = os.read(read_end, 1024)
+  content = ""
+  try:
+    content = os.read(read_end, 1024)
+    if sys.version_info[0] == 3:
+      content = str(content, 'ascii')
+  except:
+    pass
   assert content == s
 
 def test_with():
@@ -26,7 +36,7 @@ def test_auto_naming():
   with Tracer():
     x = 5
     y = 6
-  check_pipe_content(">:t:tracer-py/test\\.py\\:26(test_auto_naming)::<:t:tracer-py/test\\.py\\:26(test_auto_naming)::")
+  check_pipe_content(">:t:tracer-py/test\\.py\\:36(test_auto_naming)::<:t:tracer-py/test\\.py\\:36(test_auto_naming)::")
 
 def test_decorator():
   @Tracer
@@ -42,7 +52,7 @@ def test_start_stop():
   x = 8
   y = 5
   t.stop(args={"x": x})
-  check_pipe_content(">:t:tracer-py/test\\.py\\:41(test_start_stop)::<:t:tracer-py/test\\.py\\:41(test_start_stop):x=8:")
+  check_pipe_content(">:t:tracer-py/test\\.py\\:51(test_start_stop)::<:t:tracer-py/test\\.py\\:51(test_start_stop):x=8:")
 
   t.start("mytest")
   y = 6
@@ -58,4 +68,17 @@ def test_auto_naming_in_nested_scope():
   def g():
     f()
   g()
-  check_pipe_content(">:t:tracer-py/test\\.py\\:55(f)::<:t:tracer-py/test\\.py\\:55(f)::")
+  check_pipe_content(">:t:tracer-py/test\\.py\\:65(f)::<:t:tracer-py/test\\.py\\:65(f)::")
+
+@pytest.mark.skip(reason="not implemented yet")
+def test_auto_correlate_nested_functions():
+  @Tracer
+  def f():
+      x = 5
+      y = 6
+  @Tracer
+  def g():
+    f()
+  g()
+  check_pipe_content(">:t:g::<:t:g.f::>:t:g.f::<:t:g::")
+
