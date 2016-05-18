@@ -70,15 +70,34 @@ def test_auto_naming_in_nested_scope():
   g()
   check_pipe_content(">:t:tracer-py/test\\.py\\:65(f)::<:t:tracer-py/test\\.py\\:65(f)::")
 
-@pytest.mark.skip(reason="not implemented yet")
-def test_auto_correlate_nested_functions():
-  @Tracer
-  def f():
-      x = 5
-      y = 6
-  @Tracer
-  def g():
-    f()
-  g()
-  check_pipe_content(">:t:g::<:t:g.f::>:t:g.f::<:t:g::")
+def test_nested_tracer():
+  with Tracer("g") as g:
+    x = 8
+    with g.span("f"):
+      y = 8
+    with g.span("h") as h:
+      p = 19
+      with h.span("u"):
+        u = 80
+  check_pipe_content(">:t:g::>:t:g.f::<:t:g.f::>:t:g.h::>:t:g.h.u::<:t:g.h.u::<:t:g.h::<:t:g::")
 
+def test_nested_tracer_autonaming():
+  with Tracer() as g:
+    x = 8
+    with g.span():
+      y = 8
+    with g.span() as h:
+      p = 19
+      with h.span():
+        u = 80
+        
+  check_pipe_content(
+    ">:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming)::"
+    ">:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming).tracer-py/test\.py\:87(test_nested_tracer_autonaming)::"
+    "<:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming).tracer-py/test\.py\:87(test_nested_tracer_autonaming)::"
+    ">:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming).tracer-py/test\.py\:89(test_nested_tracer_autonaming)::"
+    ">:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming).tracer-py/test\.py\:89(test_nested_tracer_autonaming).tracer-py/test\.py\:91(test_nested_tracer_autonaming)::"
+    "<:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming).tracer-py/test\.py\:89(test_nested_tracer_autonaming).tracer-py/test\.py\:91(test_nested_tracer_autonaming)::"
+    "<:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming).tracer-py/test\.py\:89(test_nested_tracer_autonaming)::"
+    "<:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming)::"
+    )

@@ -37,6 +37,7 @@ class Tracer(object):
 
   def __enter__(self):
     self.__emit_trace(">", self.enter_args)
+    return self
 
   def __exit__(self, exc_type, exc_value, exc_traceback):
     self.__emit_trace("<")
@@ -53,3 +54,9 @@ class Tracer(object):
 
   def stop(self, args={}):
     self.__emit_trace("<", args)
+
+  def span(self, tag=None, enter_args={}, exit_args={}):
+    t = Tracer("", enter_args, exit_args)
+    t.__detect_tag(tag)
+    t.tag = "%s.%s" % (self.tag, t.tag)
+    return t
