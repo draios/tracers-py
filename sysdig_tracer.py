@@ -38,6 +38,7 @@ class Tracer(object):
     elif isfunction(tag):
       self.tag = tag.__name__
       self.wrapped_func = tag
+      self.function_calls = 0
     else:
       tb = traceback.extract_stack(None, 3)[0]
       filepath = tb[0]
@@ -75,26 +76,32 @@ class Tracer(object):
       #
       # @Tracer
       # def myf():  ....
-      enter_args = {}
-      for key, value in self.enter_args.items():
-        if isinstance(value, Args):
-          enter_args[key] = value(args)
-        elif isinstance(value, Kwds):
-          enter_args[key] = value(kwds)
-        elif isinstance(value, str):
-          enter_args[key] = value
 
-      self.__emit_trace(">", enter_args)
+      if self.function_calls == 0:
+        enter_args = {}
+        for key, value in self.enter_args.items():
+          if isinstance(value, Args):
+            enter_args[key] = value(args)
+          elif isinstance(value, Kwds):
+            enter_args[key] = value(kwds)
+          elif isinstance(value, str):
+            enter_args[key] = value
+        self.__emit_trace(">", enter_args)
+      
+      # function_calls counter helps to detect recursive calls
+      # and print them only once
+      self.function_calls += 1
       res = self.wrapped_func(*args, **kwds)
-        
-      exit_args = {}
-      for key, value in self.exit_args.items():
-        if value == ReturnValue:
-          exit_args[key] = res
-        elif isinstance(value, str):
-          exit_args[key] = value
+      self.function_calls -= 1
 
-      self.__emit_trace("<", exit_args)
+      if self.function_calls == 0:
+        exit_args = {}
+        for key, value in self.exit_args.items():
+          if value == ReturnValue:
+            exit_args[key] = res
+          elif isinstance(value, str):
+            exit_args[key] = value
+        self.__emit_trace("<", exit_args)
       return res
 
   def start(self, tag=None, args={}):
@@ -111,5 +118,6 @@ class Tracer(object):
     return t
 
   def __get__(self, obj, objtype):
-    # This is needed to support decorating methods instead of spare functions
+    # This is needed to support decorating methods
+    # instead of spare functions
     return functools.partial(self.__call__, obj)

@@ -150,3 +150,13 @@ def test_decorator_as_method():
   inst = MyTestClass()
   inst.doWork()
   check_pipe_content(">:t:doWork::<:t:doWork::")
+
+def test_recursive_functions():
+  @Tracer(enter_args={"n": Args(0)}, exit_args={"ret": ReturnValue})
+  def factorial(n):
+    if n == 1:
+      return 1
+    else:
+      return n * factorial(n-1)
+  assert factorial(9) == 9*8*7*6*5*4*3*2*1
+  check_pipe_content(">:t:factorial:n=9:<:t:factorial:ret=362880:")
