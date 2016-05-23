@@ -1,4 +1,4 @@
-from sysdig_tracer import Tracer 
+from sysdig_tracer import Tracer, Args, ReturnValue, Kwds
 import sysdig_tracer
 import os
 import fcntl
@@ -90,7 +90,7 @@ def test_nested_tracer_autonaming():
       p = 19
       with h.span():
         u = 80
-        
+
   check_pipe_content(
     ">:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming)::"
     ">:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming).tracer-py/test\.py\:87(test_nested_tracer_autonaming)::"
@@ -101,3 +101,52 @@ def test_nested_tracer_autonaming():
     "<:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming).tracer-py/test\.py\:89(test_nested_tracer_autonaming)::"
     "<:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming)::"
     )
+
+def test_decorator_complex():
+  @Tracer
+  def myfunction(x, y):
+    return x*y
+  assert myfunction(3, 4) == 12
+  check_pipe_content(">:t:myfunction::<:t:myfunction::")
+
+def test_decorator_complex_args():
+  @Tracer(enter_args={"iterative": 1})
+  def myfunction(x, y):
+    return x*y
+  assert myfunction(3, 4) == 12
+  check_pipe_content(">:t:myfunction::<:t:myfunction::")
+
+def test_exit_args():
+  @Tracer(enter_args={"n": Args(0)}, exit_args={"ret": ReturnValue})
+  def factorial(n):
+    ret = 1
+    while n > 0:
+      ret *= n
+      n -= 1
+    return ret
+  assert factorial(9) == 9*8*7*6*5*4*3*2*1
+  check_pipe_content(">:t:factorial:n=9:<:t:factorial:ret=362880:")
+
+def test_exit_kwds():
+  @Tracer(enter_args={"n": Kwds("n")}, exit_args={"ret": ReturnValue})
+  def factorial(n):
+    ret = 1
+    while n > 0:
+      ret *= n
+      n -= 1
+    return ret
+  assert factorial(n=9) == 9*8*7*6*5*4*3*2*1
+  check_pipe_content(">:t:factorial:n=9:<:t:factorial:ret=362880:")
+
+def test_decorator_as_method():
+  class MyTestClass(object):
+    def __init__(self):
+      self.x = 90
+
+    @Tracer
+    def doWork(self):
+      y = self.x + 80
+
+  inst = MyTestClass()
+  inst.doWork()
+  check_pipe_content(">:t:doWork::<:t:doWork::")
