@@ -3,13 +3,14 @@ Python library to easy emit Sysdig tracers
 
 # Install
 
-To install it just type:
+This library supports python 2.7 and 3, it also works on pypy 3 as well. To install it, just type:
 
 ```
 pip install sysdig-tracer
 ```
 
-Install [sysdig](http://www.sysdig.org/install/)
+Install also [sysdig](http://www.sysdig.org/install/) to read trace data and correlate them.
+
 # Usage
 
 Using this library is pretty easy, just wrap your code in a `with` statement:
