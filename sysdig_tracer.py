@@ -1,3 +1,8 @@
+# Copyright (C) 2016 Sysdig inc.
+# All rights reserved
+
+# Author: Luca Marturana (luca@sysdig.com)
+
 import os
 import traceback
 from inspect import isfunction
