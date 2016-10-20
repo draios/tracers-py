@@ -1,5 +1,5 @@
-from sysdig_tracer import Tracer, Args, ReturnValue, Kwds
-import sysdig_tracer
+from sysdig_tracers import Tracer, Args, ReturnValue, Kwds
+import sysdig_tracers
 import os
 import fcntl
 import sys
@@ -7,7 +7,7 @@ import pytest
 
 # hack to send tracers to a pipe and allow unit testing
 read_end, write_end = os.pipe()
-sysdig_tracer.NULL_FD = write_end
+sysdig_tracers.NULL_FD = write_end
 fcntl.fcntl(read_end, fcntl.F_SETFL, os.O_NONBLOCK)
 
 def check_pipe_content(s):

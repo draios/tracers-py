@@ -6,7 +6,7 @@ Python library to easy emit Sysdig tracers
 This library supports python 2.7 and 3, it also works on pypy 3 as well. To install it, just type:
 
 ```
-pip install sysdig-tracer
+pip install sysdig-tracers
 ```
 
 Install also [sysdig](http://www.sysdig.org/install/) to read trace data and correlate them.
@@ -16,7 +16,7 @@ Install also [sysdig](http://www.sysdig.org/install/) to read trace data and cor
 Using this library is pretty easy, just wrap your code in a `with` statement:
 
 ```python
-from sysdig_tracer import Tracer
+from sysdig_tracers import Tracer
 import time
 
 while True:
@@ -44,7 +44,7 @@ $ sysdig evt.type=tracer
 You can also use it as a decorator to automatically trace each function call:
 
 ```python
-from sysdig_tracer import Tracer
+from sysdig_tracers import Tracer
 import time
 
 @Tracer

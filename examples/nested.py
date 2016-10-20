@@ -1,4 +1,4 @@
-from sysdig_tracer import Tracer
+from sysdig_tracers import Tracer
 import time
 import random
 
