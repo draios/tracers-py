@@ -4,6 +4,7 @@ import os
 import fcntl
 import sys
 import pytest
+import re
 
 # hack to send tracers to a pipe and allow unit testing
 read_end, write_end = os.pipe()
@@ -18,7 +19,8 @@ def check_pipe_content(s):
       content = str(content, 'ascii')
   except:
     pass
-  assert content == s
+  exp = re.compile(s)
+  assert exp.match(content)
 
 def test_with():
   with Tracer("myname"):
@@ -36,7 +38,7 @@ def test_auto_naming():
   with Tracer():
     x = 5
     y = 6
-  check_pipe_content(">:t:tracer-py/test\\.py\\:36(test_auto_naming)::<:t:tracer-py/test\\.py\\:36(test_auto_naming)::")
+  check_pipe_content(r">:t:[^:]*test\\\.py\\:[0-9]+\(test_auto_naming\)::<:t:[^:]*test\\\.py\\:[0-9]+\(test_auto_naming\)::")
 
 def test_decorator():
   @Tracer
@@ -52,7 +54,7 @@ def test_start_stop():
   x = 8
   y = 5
   t.stop(args={"x": x})
-  check_pipe_content(">:t:tracer-py/test\\.py\\:51(test_start_stop)::<:t:tracer-py/test\\.py\\:51(test_start_stop):x=8:")
+  check_pipe_content(r">:t:[^:]*test\\\.py\\:[0-9]+\(test_start_stop\)::<:t:[^:]*test\\\.py\\:[0-9]+\(test_start_stop\):x=8:")
 
   t.start("mytest")
   y = 6
@@ -68,7 +70,7 @@ def test_auto_naming_in_nested_scope():
   def g():
     f()
   g()
-  check_pipe_content(">:t:tracer-py/test\\.py\\:65(f)::<:t:tracer-py/test\\.py\\:65(f)::")
+  check_pipe_content(r">:t:[^:]*test\\\.py\\:[0-9]+\(f\)::<:t:[^:]*test\\\.py\\:[0-9]+\(f\)::")
 
 def test_nested_tracer():
   with Tracer("g") as g:
@@ -91,16 +93,11 @@ def test_nested_tracer_autonaming():
       with h.span():
         u = 80
 
-  check_pipe_content(
-    ">:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming)::"
-    ">:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming).tracer-py/test\.py\:87(test_nested_tracer_autonaming)::"
-    "<:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming).tracer-py/test\.py\:87(test_nested_tracer_autonaming)::"
-    ">:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming).tracer-py/test\.py\:89(test_nested_tracer_autonaming)::"
-    ">:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming).tracer-py/test\.py\:89(test_nested_tracer_autonaming).tracer-py/test\.py\:91(test_nested_tracer_autonaming)::"
-    "<:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming).tracer-py/test\.py\:89(test_nested_tracer_autonaming).tracer-py/test\.py\:91(test_nested_tracer_autonaming)::"
-    "<:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming).tracer-py/test\.py\:89(test_nested_tracer_autonaming)::"
-    "<:t:tracer-py/test\.py\:85(test_nested_tracer_autonaming)::"
-    )
+  func = r"[^:]*test\\\.py\\:[0-9]+\(test_nested_tracer_autonaming\)"
+  check_pipe_content(r">:t:" + func + "::>:t:" + func + r"\." + func + "::<:t:"
+    + func + r"\." + func + "::>:t:" + func + r"\." + func + "::>:t:" + func
+    + r"\." + func + r"\." + func + "::<:t:" + func + r"\." + func + r"\." +
+    func + "::<:t:" + func + r"\." + func + "::<:t:" + func + "::")
 
 def test_decorator_complex():
   @Tracer
