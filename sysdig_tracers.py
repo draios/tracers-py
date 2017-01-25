@@ -76,7 +76,7 @@ class Tracer(object):
 
   """
 
-  def __init__(self, tag=None, enter_args={}, exit_args={}):
+  def __init__(self, tag=None, enter_args=None, exit_args=None):
     """
     Create a new Tracer, all arguments are optional:
 
@@ -85,8 +85,8 @@ class Tracer(object):
     exit_args -- dictionary of exit arguments for the trace, use ReturnValue to extract function return value
     """
     self.__detect_tag(tag)
-    self.enter_args = enter_args
-    self.exit_args = exit_args
+    self.enter_args = enter_args if not enter_args is None else {}
+    self.exit_args = exit_args if not exit_args is None else {}
 
   def __detect_tag(self, tag):
     if isinstance(tag, str):
@@ -102,7 +102,9 @@ class Tracer(object):
       filepath = filepath.replace(".", "\.")
       self.tag = "%s\:%d(%s)" % (filepath, tb[1], tb[2].replace("<","\<").replace(">","\>"))
 
-  def __emit_trace(self, direction, args={}):
+  def __emit_trace(self, direction, args=None):
+    if args is None:
+      args = {}
     args_s = ",".join(["%s=%s" % item for item in args.items()])
     tracer = "%s:t:%s:%s:" % (direction, self.tag, args_s)
     if sys.version_info[0] == 3:
@@ -160,7 +162,7 @@ class Tracer(object):
         self.__emit_trace("<", exit_args)
       return res
 
-  def start(self, tag=None, args={}):
+  def start(self, tag=None, args=None):
     """
     Emit a tracer enter event.
     
@@ -182,7 +184,7 @@ class Tracer(object):
     self.__detect_tag(tag)
     self.__emit_trace(">", args)
 
-  def stop(self, args={}):
+  def stop(self, args=None):
     """
     Emit an exit trace event
 
@@ -190,7 +192,7 @@ class Tracer(object):
     """
     self.__emit_trace("<", args)
 
-  def span(self, tag=None, enter_args={}, exit_args={}):
+  def span(self, tag=None, enter_args=None, exit_args=None):
     """
     Create a nested span inside a tracer,
     the usage is the same of Tracer() itself:
