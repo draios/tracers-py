@@ -71,4 +71,4 @@ $ sysdig evt.type=tracer
 8502 13:01:27.801823005 1 python (11171) > tracer id=11171 tags=myprinter args=
 ```
 
-For more advanced usages see the [examples](https://github.com/draios/tracer-py/examples) directory or our [tests](https://github.com/draios/tracer-py/blob/master/test.py)
+For more advanced usages see the [examples](https://github.com/draios/tracers-py/tree/master/examples) directory or our [tests](https://github.com/draios/tracers-py/blob/master/test.py)
