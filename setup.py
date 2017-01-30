@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='sysdig-tracers',
-      version='0.1.1',
+      version='0.1.2',
       description='Python library to emit Sysdig tracers',
       url='http://github.com/draios/tracers-py',
       author='sysdig Inc.',
