@@ -9,7 +9,7 @@ This library supports python 2.7 and 3, it also works on pypy 3 as well. To inst
 pip install sysdig-tracers
 ```
 
-Install also [sysdig](http://www.sysdig.org/install/) to read trace data and correlate them.
+Install also [sysdig](https://github.com/draios/sysdig/wiki/How-to-Install-Sysdig-for-Linux) to read trace data and correlate them.
 
 # Usage
 
